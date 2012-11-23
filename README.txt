@@ -28,5 +28,3 @@ Maintainers
 -----------
 - dasjo (Josef Dabernig)
 
-Developed by Josef Dabernig for the Geocluster project. See
-

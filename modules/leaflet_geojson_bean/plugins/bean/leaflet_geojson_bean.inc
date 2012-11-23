@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Listing bean plugin.
+ * Leaflet GeoJSON bean plugin.
  */
 
 class LeafletGeoJSON extends BeanPlugin {
