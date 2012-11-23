@@ -70,6 +70,7 @@ class LeafletGeoJSON extends BeanPlugin {
 
     // Prepare source and fetch json.
     $source = leaflet_geojson_get_source($bean->settings['source']);
+    /*
     $json = $this->getGeoJSON($source);
     $features = array(
       array(
@@ -77,6 +78,8 @@ class LeafletGeoJSON extends BeanPlugin {
         'json' => $json,
       )
     );
+    */
+    $features = array();
 
     $content['map'] = array(
       '#markup' => leaflet_render_map($map, $features, $height . 'px'),
