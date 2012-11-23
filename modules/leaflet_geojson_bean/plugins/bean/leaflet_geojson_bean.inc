@@ -69,10 +69,15 @@ class LeafletGeoJSON extends BeanPlugin {
     $height = $bean->settings['height'];
 
     // Prepare source and fetch json.
-    $source = leaflet_geojson_bean_get_source($bean->settings['source']);
+    $source_info = leaflet_geojson_source_get_info($bean->settings['source']);
     $features = array();
 
-    drupal_alter('leaflet_geojson_bean_map_view', $map, $source, $bean);
+    $context = array(
+      'map' => &$map,
+      'source_info' => &$source_info,
+      'bean' => &$bean,
+    );
+    drupal_alter('leaflet_geojson_bean_view_features', $features, $context);
 
     $content['map'] = array(
       '#markup' => leaflet_render_map($map, $features, $height . 'px'),
@@ -89,42 +94,12 @@ class LeafletGeoJSON extends BeanPlugin {
   }
 
   protected function getSourceOptions() {
-    $sources = leaflet_geojson_bean_sources();
+    $sources = leaflet_geojson_source_get_info(NULL, TRUE);
     $source_options = array();
     foreach ($sources as $id => $source) {
       $source_options[$id] = $source['title'];
     }
     return $source_options;
   }
-
-// This code would allow for directly injecting the json.
-// @todo: but needs to be aligned with the bbox strategy.
-//
-//  $json = $this->getGeoJSON($source);
-//  $features = array(
-//    array(
-//      'type' => 'json',
-//      'json' => $json,
-//    )
-//  );
-//
-//
-//  protected function getGeoJSON($source) {
-//    // @todo: doesn't work because views_geojson directly outputs and terminates the request.
-//    /*
-//    if ($source['type'] == 'views_geojson') {
-//      $view = views_get_view($source['view']);
-//      $output = $view->execute_display($source['view_display']);
-//    }
-//    */
-//    $result = drupal_http_request($source['url']);
-//    if (in_array( $result->code, array(200, 304))) {
-//      $json_string = (isset($result->data)) ? $result->data : '';
-//      return drupal_json_decode($json_string);
-//    }
-//    else {
-//      // Error $result->code
-//    }
-//  }
 
 }

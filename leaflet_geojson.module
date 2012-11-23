@@ -5,7 +5,12 @@
  * API Extension for using Leaflet with GeoJSON that currently just allows to add a bbox strategy.
  */
 
-function leaflet_geojson_add_bbox_support($url) {
+/**
+ * Add a Bounding Box Strategy
+ *
+ * @param $url
+ */
+function leaflet_geojson_add_bbox_strategy($url) {
   // Add bounding box javascript.
   drupal_add_js(
     drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
@@ -17,4 +22,86 @@ function leaflet_geojson_add_bbox_support($url) {
     'url' => $url,
   );
   drupal_add_js(array('leafletBBox' => $settings), 'setting');
+}
+
+
+function leaflet_geojson_source_get_info($source = NULL, $skip_cache = FALSE) {
+  if (!$skip_cache) {
+    static $drupal_static_fast;
+    if (!isset($drupal_static_fast)) {
+      $drupal_static_fast['leaflet_geojson_source_info'] = &drupal_static(__FUNCTION__);
+    }
+    $source_info = &$drupal_static_fast['leaflet_geojson_source_info'];
+    if (empty($source_info)) {
+      if ($cache = cache_get("leaflet_geojson_source_info")) {
+        $source_info = $cache->data;
+      }
+    }
+  }
+
+  if (empty($source_info)) {
+    $source_info = module_invoke_all('leaflet_geojson_source_info');
+
+    // Let other modules alter the source info.
+    drupal_alter('leaflet_geojson_source_info', $source_info);
+
+    cache_set("leaflet_geojson_source_info", $source_info);
+  }
+
+  if (empty($source)) {
+    return $source_info;
+  }
+  elseif (isset($source_info[$source])) {
+    return $source_info[$source];
+  }
+}
+
+/**
+ * Implements hook_leaflet_geojson_source_info().
+ */
+function leaflet_geojson_leaflet_geojson_source_info() {
+  $sources = array();
+  $views = views_get_all_views();
+  foreach ($views as $view) {
+    foreach ($view->display as $display => $data) {
+      $view->set_display($display);
+
+      // Make GeoJSON sources from the views_geojson module.
+      if ($view->display_handler->get_option('style_plugin') == 'views_geojson' &&
+        $view->display_handler->display->display_plugin == 'page' &&
+        $view->display_handler->get_option('path') != ''
+      ) {
+        $display_title = '(' . $display . ')';
+        if (!empty($view->display['default']->handler->options['title'])) {
+          $display_title = $view->display['default']->handler->options['title'] . ' ' . $display_title;
+        }
+        $title = $view->human_name . ' - ' . $display_title;
+
+        // Determine if we should use a BBox strategy.
+        $useBBox = FALSE;
+        if (isset($view->display['default']->display_options['arguments']) &&
+          isset($view->display['default']->display_options['arguments']['bbox_argument']) &&
+          $view->display['default']->display_options['arguments']['bbox_argument']['arg_id'] == 'bbox') {
+          $useBBox = TRUE;
+        }
+        $source['bbox'] = $useBBox;
+
+        $source = array(
+          'id' => $view->name . '_' . $display,
+          'title' => $title,
+          'type' => 'views_geojson',
+          'url' => url($view->display_handler->get_option('path'), array('absolute' => TRUE)),
+          'useBBox' => $useBBox,
+        );
+
+        // Custom views_geojson attributes.
+        $source['view'] = $view->name;
+        $source['view_display'] = $display;
+
+        $sources[$source['id']] = $source;
+      }
+    }
+    $view->destroy();
+  }
+  return $sources;
 }

@@ -1,5 +1,5 @@
 name = "Leaflet GeoJSON Bean"
-description = "Create Leaflet Map Beans from Views GeoJSON page displays."
+description = "Create Leaflet Map Beans based on Views GeoJSON page displays."
 
 core = 7.x
 

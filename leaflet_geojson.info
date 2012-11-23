@@ -1,5 +1,5 @@
 name = "Leaflet GeoJSON"
-description = "API Extension for using Leaflet with GeoJSON that currently just adds a bbox strategy."
+description = "API Extension for using Leaflet with GeoJSON data sources."
 
 core = 7.x
 

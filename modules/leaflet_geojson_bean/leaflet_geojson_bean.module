@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Create Leaflet Map Beans from Views GeoJSON page displays.
+ * Create Leaflet Map Beans based on Views GeoJSON page displays.
  */
 
 /**
@@ -19,8 +19,8 @@ function leaflet_geojson_bean_bean_types() {
   $plugins = array();
   $plugin_path = drupal_get_path('module', 'leaflet_geojson_bean') . '/plugins/bean';
   $plugins['leaflet_geojson_bean'] = array(
-    'label' => t('Leaflet Map from Views GeoJSON page'),
-    'description' => t('Leaflet Map from Views GeoJSON page.'),
+    'label' => t('Leaflet GeoJSON'),
+    'description' => t('Leaflet Map based on Views GeoJSON page.'),
     'handler' => array(
       'class' => 'LeafletGeoJSON',
       'parent' => 'bean',
@@ -31,71 +31,40 @@ function leaflet_geojson_bean_bean_types() {
   return $plugins;
 }
 
-function leaflet_geojson_bean_get_source($source) {
-  $sources = leaflet_geojson_bean_sources();
-  if (isset($sources[$source])) {
-    return $sources[$source];
-  }
-  return NULL;
-}
-
-function leaflet_geojson_bean_sources() {
-  $sources = array();
-  // @todo: Add caching?
-  // @todo: Add info hook.
-
-  $views = views_get_all_views();
-  foreach ($views as $view) {
-    foreach ($view->display as $display => $data) {
-      $view->set_display($display);
-
-      // Make GeoJSON sources from the views_geojson module.
-      if ($view->display_handler->get_option('style_plugin') == 'views_geojson' &&
-        $view->display_handler->display->display_plugin == 'page' &&
-        $view->display_handler->get_option('path') != ''
-      ) {
-        $display_title = '(' . $display . ')';
-        if (!empty($view->display['default']->handler->options['title'])) {
-          $display_title = $view->display['default']->handler->options['title'] . ' ' . $display_title;
-        }
-        $title = $view->human_name . ' - ' . $display_title;
-
-        // Determine if we should use a BBox strategy.
-        $useBBox = FALSE;
-        if (isset($view->display['default']->display_options['arguments']) &&
-          isset($view->display['default']->display_options['arguments']['bbox_argument']) &&
-          $view->display['default']->display_options['arguments']['bbox_argument']['arg_id'] == 'bbox') {
-          $useBBox = TRUE;
-        }
-        $source['bbox'] = $useBBox;
-
-        $source = array(
-          'id' => $view->name . '_' . $display,
-          'title' => $title,
-          'type' => 'views_geojson',
-          'url' => url($view->display_handler->get_option('path'), array('absolute' => TRUE)),
-          'useBBox' => $useBBox,
-        );
-
-        // Custom views_geojson attributes.
-        $source['view'] = $view->name;
-        $source['view_display'] = $display;
-
-        $sources[$source['id']] = $source;
-      }
-    }
-    $view->destroy();
-  }
-  return $sources;
-}
-
 /**
- * Implements hook_leaflet_geojson_bean_map_view_alter().
+ * Implements hook_leaflet_geojson_bean_view_features_alter().
  */
-function leaflet_geojson_bean_leaflet_geojson_bean_map_view_alter(&$map, &$source, &$bean) {
+function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$features, array &$context) {
+  $source_info = $context['source_info'];
   // Add bbox js.
-  if ($source['useBBox']) {
-    leaflet_geojson_add_bbox_support($source['url']);
+  if ($source_info['useBBox']) {
+    leaflet_geojson_add_bbox_strategy($source_info['url']);
+  }
+  else {
+    $json = _leaflet_geojson_bean_fetch_json($source_info);
+    $features[] = array(
+      'type' => 'json',
+      'json' => $json,
+    );
+  }
+}
+
+
+function _leaflet_geojson_bean_fetch_json($source_info) {
+  // @todo: doesn't work because views_geojson directly outputs and terminates the request.
+  /*
+  if ($source['type'] == 'views_geojson') {
+    $view = views_get_view($source['view']);
+    $output = $view->execute_display($source['view_display']);
+  }
+  */
+  $result = drupal_http_request($source_info['url']);
+  if (in_array( $result->code, array(200, 304))) {
+    $json_string = (isset($result->data)) ? $result->data : '';
+    return drupal_json_decode($json_string);
+  }
+  else {
+    // Error $result->code
   }
 }
 
