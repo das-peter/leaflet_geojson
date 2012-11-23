@@ -64,11 +64,38 @@ class LeafletGeoJSON extends BeanPlugin {
    * Displays the bean.
    */
   public function view($bean, $content, $view_mode = 'default', $langcode = NULL) {
+    // Prepare leaflet map settings.
     $map = leaflet_map_get_info($bean->settings['map']);
     $height = $bean->settings['height'];
-    $content['map'] = array(
-      '#markup' => leaflet_render_map($map, array(), $height),
+
+    // Prepare source and fetch json.
+    $source = leaflet_geojson_get_source($bean->settings['source']);
+    $json = $this->getGeoJSON($source);
+    $features = array(
+      array(
+        'type' => 'json',
+        'json' => $json,
+      )
     );
+
+    $content['map'] = array(
+      '#markup' => leaflet_render_map($map, $features, $height . 'px'),
+    );
+
+    if ($source['useBBox']) {
+      drupal_add_js(
+        drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
+        array(
+          // Add our script after leaflet.drupal.js.
+          'weight' => 5
+        )
+      );
+      // Add custom settings.
+      $settings = array(
+        'url' => $source['url'],
+      );
+      drupal_add_js(array('leafletBBox' => $settings), 'setting');
+    }
     return $content;
   }
 
@@ -87,5 +114,23 @@ class LeafletGeoJSON extends BeanPlugin {
       $source_options[$id] = $source['title'];
     }
     return $source_options;
+  }
+
+  protected function getGeoJSON($source) {
+    /*
+     * @todo: doesn't work because views_geojson directly outputs and terminates the request.
+    if ($source['type'] == 'views_geojson') {
+      $view = views_get_view($source['view']);
+      $output = $view->execute_display($source['view_display']);
+    }
+    */
+    $result = drupal_http_request($source['url']);
+    if (in_array( $result->code, array(200, 304))) {
+      $json_string = (isset($result->data)) ? $result->data : '';
+      return drupal_json_decode($json_string);
+    }
+    else {
+      // Error $result->code
+    }
   }
 }

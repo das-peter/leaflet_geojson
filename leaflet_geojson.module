@@ -32,6 +32,14 @@ function leaflet_geojson_bean_types() {
   return $plugins;
 }
 
+function leaflet_geojson_get_source($source) {
+  $sources = leaflet_geojson_sources();
+  if (isset($sources[$source])) {
+    return $sources[$source];
+  }
+  return NULL;
+}
+
 function leaflet_geojson_sources() {
   $sources = array();
   // @todo: Add caching?
@@ -53,22 +61,26 @@ function leaflet_geojson_sources() {
         }
         $title = $view->human_name . ' - ' . $display_title;
 
-        // Determine if we should use a BBOX strategy.
-        $useBBOX = FALSE;
+        // Determine if we should use a BBox strategy.
+        $useBBox = FALSE;
         if (isset($view->display['default']->display_options['arguments']) &&
           isset($view->display['default']->display_options['arguments']['bbox_argument']) &&
           $view->display['default']->display_options['arguments']['bbox_argument']['arg_id'] == 'bbox') {
-          $useBBOX = TRUE;
+          $useBBox = TRUE;
         }
-        $source['bbox'] = $useBBOX;
+        $source['bbox'] = $useBBox;
 
         $source = array(
           'id' => $view->name . '_' . $display,
           'title' => $title,
           'type' => 'views_geojson',
           'url' => url($view->display_handler->get_option('path'), array('absolute' => TRUE)),
-          'useBBOX' => $useBBOX,
+          'useBBox' => $useBBox,
         );
+
+        // Custom views_geojson attributes.
+        $source['view'] = $view->name;
+        $source['view_display'] = $display;
 
         $sources[$source['id']] = $source;
       }
@@ -77,6 +89,7 @@ function leaflet_geojson_sources() {
   }
   return $sources;
 }
+
 
 /**
  * Implements hook_theme().
