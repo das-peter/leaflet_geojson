@@ -1,0 +1,126 @@
+<?php
+
+/**
+ * @file
+ * Create Leaflet Maps from Views GeoJSON page displays.
+ */
+
+
+/**
+ * Implements hook_bean_types_api_info().
+ */
+function leaflet_geojson_bean_types_api_info() {
+  return array('api' => 4);
+}
+
+/**
+ * Implements hook_bean_types().
+ */
+function leaflet_geojson_bean_types() {
+  $plugins = array();
+  $plugin_path = drupal_get_path('module', 'leaflet_geojson') . '/plugins/bean';
+  $plugins['leaflet_geojson'] = array(
+    'label' => t('Leaflet Map from Views GeoJSON page'),
+    'description' => t('Leaflet Map from Views GeoJSON page.'),
+    'handler' => array(
+      'class' => 'LeafletGeoJSON',
+      'parent' => 'bean',
+    ),
+    'path' => $plugin_path,
+    'file' => 'leaflet_geojson.inc',
+  );
+  return $plugins;
+}
+
+function leaflet_geojson_sources() {
+  $sources = array();
+  // @todo: Add caching?
+  // @todo: Add info hook.
+
+  $views = views_get_all_views();
+  foreach ($views as $view) {
+    foreach ($view->display as $display => $data) {
+      $view->set_display($display);
+
+      // Make GeoJSON sources from the views_geojson module.
+      if ($view->display_handler->get_option('style_plugin') == 'views_geojson' &&
+        $view->display_handler->display->display_plugin == 'page' &&
+        $view->display_handler->get_option('path') != ''
+      ) {
+        $display_title = '(' . $display . ')';
+        if (!empty($view->display['default']->handler->options['title'])) {
+          $display_title = $view->display['default']->handler->options['title'] . ' ' . $display_title;
+        }
+        $title = $view->human_name . ' - ' . $display_title;
+
+        // Determine if we should use a BBOX strategy.
+        $useBBOX = FALSE;
+        if (isset($view->display['default']->display_options['arguments']) &&
+          isset($view->display['default']->display_options['arguments']['bbox_argument']) &&
+          $view->display['default']->display_options['arguments']['bbox_argument']['arg_id'] == 'bbox') {
+          $useBBOX = TRUE;
+        }
+        $source['bbox'] = $useBBOX;
+
+        $source = array(
+          'id' => $view->name . '_' . $display,
+          'title' => $title,
+          'type' => 'views_geojson',
+          'url' => url($view->display_handler->get_option('path'), array('absolute' => TRUE)),
+          'useBBOX' => $useBBOX,
+        );
+
+        $sources[$source['id']] = $source;
+      }
+    }
+    $view->destroy();
+  }
+  return $sources;
+}
+
+/**
+ * Implements hook_theme().
+ */
+/*
+function bean_article_listing_theme() {
+  $items = array();
+  $items['article_listing_settings'] = array(
+    'arguments' => array(
+      'records_shown' => NULL,
+    ),
+    'file' => 'bean_article_listing.theme.inc',
+  );
+  $items['article_listing_more_link'] = array(
+    'arguments' => array(
+      'text' => NULL,
+      'path'  => NULL,
+    ),
+    'file' => 'bean_article_listing.theme.inc',
+  );
+  return $items;
+}
+*/
+
+
+
+/**
+ * Implements hook_views_api().
+ */
+/*
+function leaflet_geojson_views_api() {
+  return array(
+    'api' => '3',
+  );
+}
+*/
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+/*
+function leaflet_geojson_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'leaflet_geojson') {
+    return "plugins/$plugin_type";
+  }
+}
+*/
