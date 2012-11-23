@@ -2,10 +2,19 @@
 Leaflet GeoJSON
 -----------
 
-A small API module to provide functionality useful
-when creating Leaflet maps based on GeoJSON data.
+Leaflet GeoJSON is a set of modules for creating Leaflet maps backed by GeoJSON data.
 
-API
+Modules
+-----------
+
+Leaflet GeoJSON
+- Provides API functionality as defining GeoJSON sources and adding a Leaflet bounding box strategy.
+
+Leaflet GeoJSON Bean
+- Allows you to create leaflet map blocks based on GeoJSON data and will automatically extend them with the bounding box strategy if supported.
+  Custom blocks? Even better, we are using: Bean.
+
+Leaflet GeoJSON API
 -----------
 
 leaflet_geojson_add_bbox_strategy($url).
@@ -23,8 +32,8 @@ TODO
 - Attach the bbox strategy to a specific map.
 - See @todo markers in code.
 
+For sub-module specific documentation, see their folders.
 
 Maintainers
 -----------
 - dasjo (Josef Dabernig)
-
