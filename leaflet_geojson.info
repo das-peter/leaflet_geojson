@@ -1,11 +1,6 @@
-name = "Leaflet Views GeoJSON"
-description = "Create Leaflet Maps from Views GeoJSON page displays."
+name = "Leaflet GeoJSON"
+description = "API Extension for using Leaflet with GeoJSON that currently just adds a bbox strategy."
 
 core = 7.x
 
-dependencies[] = views_geojson
 dependencies[] = leaflet
-dependencies[] = bean
-
-files[] = "plugins/bean/leaflet_geojson.inc"
-package = Bean

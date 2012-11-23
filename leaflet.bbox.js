@@ -38,20 +38,7 @@
 
   };
 
-  Drupal.leafletBBox.geoJSONOptions = {
-
-    onEachFeature: function(featureData, layer) {
-      var popupText = featureData.properties.name;
-      layer.bindPopup(popupText);
-    },
-
-    pointToLayer: function(featureData, latlng) {
-      var icon = new L.NumberedDivIcon({number: featureData.cluster_items || 1});
-      lMarker = new L.Marker(latlng, {icon:icon});
-      return lMarker;
-    }
-
-  };
+  Drupal.leafletBBox.geoJSONOptions = {};
 
   // Inject into leaflet initialize.
   // @todo: there should be a nicer way to do that?

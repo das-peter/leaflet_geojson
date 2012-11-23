@@ -69,36 +69,14 @@ class LeafletGeoJSON extends BeanPlugin {
     $height = $bean->settings['height'];
 
     // Prepare source and fetch json.
-    $source = leaflet_geojson_get_source($bean->settings['source']);
-    /*
-    $json = $this->getGeoJSON($source);
-    $features = array(
-      array(
-        'type' => 'json',
-        'json' => $json,
-      )
-    );
-    */
+    $source = leaflet_geojson_bean_get_source($bean->settings['source']);
     $features = array();
+
+    drupal_alter('leaflet_geojson_bean_map_view', $map, $source, $bean);
 
     $content['map'] = array(
       '#markup' => leaflet_render_map($map, $features, $height . 'px'),
     );
-
-    if ($source['useBBox']) {
-      drupal_add_js(
-        drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
-        array(
-          // Add our script after leaflet.drupal.js.
-          'weight' => 5
-        )
-      );
-      // Add custom settings.
-      $settings = array(
-        'url' => $source['url'],
-      );
-      drupal_add_js(array('leafletBBox' => $settings), 'setting');
-    }
     return $content;
   }
 
@@ -111,7 +89,7 @@ class LeafletGeoJSON extends BeanPlugin {
   }
 
   protected function getSourceOptions() {
-    $sources = leaflet_geojson_sources();
+    $sources = leaflet_geojson_bean_sources();
     $source_options = array();
     foreach ($sources as $id => $source) {
       $source_options[$id] = $source['title'];
@@ -119,21 +97,34 @@ class LeafletGeoJSON extends BeanPlugin {
     return $source_options;
   }
 
-  protected function getGeoJSON($source) {
-    /*
-     * @todo: doesn't work because views_geojson directly outputs and terminates the request.
-    if ($source['type'] == 'views_geojson') {
-      $view = views_get_view($source['view']);
-      $output = $view->execute_display($source['view_display']);
-    }
-    */
-    $result = drupal_http_request($source['url']);
-    if (in_array( $result->code, array(200, 304))) {
-      $json_string = (isset($result->data)) ? $result->data : '';
-      return drupal_json_decode($json_string);
-    }
-    else {
-      // Error $result->code
-    }
-  }
+// This code would allow for directly injecting the json.
+// @todo: but needs to be aligned with the bbox strategy.
+//
+//  $json = $this->getGeoJSON($source);
+//  $features = array(
+//    array(
+//      'type' => 'json',
+//      'json' => $json,
+//    )
+//  );
+//
+//
+//  protected function getGeoJSON($source) {
+//    // @todo: doesn't work because views_geojson directly outputs and terminates the request.
+//    /*
+//    if ($source['type'] == 'views_geojson') {
+//      $view = views_get_view($source['view']);
+//      $output = $view->execute_display($source['view_display']);
+//    }
+//    */
+//    $result = drupal_http_request($source['url']);
+//    if (in_array( $result->code, array(200, 304))) {
+//      $json_string = (isset($result->data)) ? $result->data : '';
+//      return drupal_json_decode($json_string);
+//    }
+//    else {
+//      // Error $result->code
+//    }
+//  }
+
 }
