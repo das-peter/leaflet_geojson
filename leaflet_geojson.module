@@ -81,6 +81,7 @@ function leaflet_geojson_leaflet_geojson_source_info() {
         $useBBox = FALSE;
         if (isset($view->display['default']->display_options['arguments']) &&
           isset($view->display['default']->display_options['arguments']['bbox_argument']) &&
+          isset($view->display['default']->display_options['arguments']['bbox_argument']['arg_id']) &&
           $view->display['default']->display_options['arguments']['bbox_argument']['arg_id'] == 'bbox') {
           $useBBox = TRUE;
         }
