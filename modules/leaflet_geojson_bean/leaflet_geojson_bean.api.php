@@ -26,7 +26,7 @@
  */
 function hook_leaflet_geojson_bean_view_features_alter(array &$features, array &$context) {
   // Add bbox js.
-  if ($source_info['useBBox']) {
+  if ($context['source_info']['useBBox']) {
     leaflet_geojson_add_bbox_strategy($source_info['url']);
   }
 }
