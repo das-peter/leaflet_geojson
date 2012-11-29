@@ -4,7 +4,7 @@
  * Leaflet GeoJSON bean plugin.
  */
 
-class LeafletGeoJSON extends BeanPlugin {
+class LeafletGeoJSONBean extends BeanPlugin {
   /**
    * Declares default block settings.
    */
