@@ -22,7 +22,9 @@
  *   identifier and containing associative arrays with the following keys:
  *   - title: A human readable title for the source.
  *   - url: The GeoJSON source url.
- *   - useBBox: (optional) Set to TRUE to activate the Bounding Box strategy.
+ *   - bbox: (optional) Set to TRUE to activate the Bounding Box strategy.
+ *   - bbox_arg_id: (optional) Specify the bbox argument identifier.
+ *       Defaults to 'BBOX'.
  *   - type: (optional) The type of source, for example views_geojson.
  *   - ... (optional) further parameters specific to the source type.
  */
@@ -35,7 +37,8 @@ function hook_leaflet_geojson_source_info() {
   $sources['views_geojson_source'] = array(
     'title' => 'My Source',
     'url' => 'http://example.com',
-    'useBBox' => TRUE,
+    'bbox' => TRUE,
+    'bbox_arg_id' => 'bbox',
     'type' => 'views_geojson',
     'view' => 'view_name',
     'view_display' => 'view_display_name'

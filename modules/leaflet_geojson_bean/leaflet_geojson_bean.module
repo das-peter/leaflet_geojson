@@ -37,7 +37,7 @@ function leaflet_geojson_bean_bean_types() {
 function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$features, array &$context) {
   $source_info = $context['source_info'];
   // Add bbox js.
-  if ($source_info['useBBox']) {
+  if (isset($source_info['bbox'])) {
     leaflet_geojson_add_bbox_strategy($source_info['url']);
   }
   else {
