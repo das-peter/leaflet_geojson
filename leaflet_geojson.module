@@ -8,9 +8,10 @@
 /**
  * Add a Bounding Box Strategy
  *
- * @param $url
+ * @param $source_info
+ *   The source info as specified in hook_leaflet_geojson_source_info().
  */
-function leaflet_geojson_add_bbox_strategy($url) {
+function leaflet_geojson_add_bbox_strategy($source_info) {
   // Add bounding box javascript.
   drupal_add_js(
     drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
@@ -18,9 +19,7 @@ function leaflet_geojson_add_bbox_strategy($url) {
     array('weight' => 5)
   );
   // Add custom settings.
-  $settings = array(
-    'url' => $url,
-  );
+  $settings = $source_info;
   drupal_add_js(array('leafletBBox' => $settings), 'setting');
 }
 
