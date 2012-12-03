@@ -4,7 +4,6 @@ description = "Create Leaflet Map Beans based on Views GeoJSON page displays."
 core = 7.x
 
 dependencies[] = leaflet_geojson
-dependencies[] = views_geojson
 dependencies[] = bean
 
-files[] = "plugins/bean/leaflet_geojson_bean.inc"
+files[] = plugins/bean/leaflet_geojson_bean.inc
