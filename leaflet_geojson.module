@@ -86,8 +86,8 @@ function leaflet_geojson_leaflet_geojson_source_info() {
         if ($arguments = $display->handler->get_option('arguments')) {
           if ($arguments['bbox_argument']['default_argument_type'] == 'querystring') {
             $source['bbox'] = TRUE;
-            if (isset($arguments['bbox_argument']['arg_id'])) {
-              $source['bbox_arg_id'] = $arguments['bbox_argument']['arg_id'];
+            if (isset($arguments['bbox_argument']['default_argument_options'])) {
+              $source['bbox_arg_id'] = $arguments['bbox_argument']['default_argument_options']['arg_id'];
             }
           }
         }
