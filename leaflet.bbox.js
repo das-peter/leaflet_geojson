@@ -18,7 +18,9 @@
 
     moveEnd: function(e) {
       var map = Drupal.leafletBBox.map;
-      Drupal.leafletBBox.makeGeoJSONLayer(map);
+      if (!map._popup) {
+        Drupal.leafletBBox.makeGeoJSONLayer(map);
+      }
     },
 
     makeGeoJSONLayer: function(map, url) {
@@ -41,7 +43,15 @@
 
   };
 
-  Drupal.leafletBBox.geoJSONOptions = {};
+  Drupal.leafletBBox.geoJSONOptions = {
+
+    onEachFeature: function(feature, layer) {
+      if (feature.properties && feature.properties.description) {
+        layer.bindPopup(feature.properties.description);
+      }
+    }
+
+  };
 
   // Inject into leaflet initialize.
   // @todo: there should be a nicer way to do that?
