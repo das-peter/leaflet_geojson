@@ -40,7 +40,7 @@ function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$f
   $map = &$context['map'];
 
   // Allow to override map center via bean settings.
-  if ($bean->settings['override_map_settings']) {
+  if (!empty($bean->settings['override_map_settings'])) {
     if (!empty($bean->settings['map_settings']['zoom'])) {
       $map['settings']['zoom'] = $bean->settings['map_settings']['zoom'];
     }
