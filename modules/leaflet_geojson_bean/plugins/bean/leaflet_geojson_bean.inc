@@ -48,6 +48,7 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#default_value' => $default_map,
       '#required' => TRUE,
     );
+    // Optionally set map height.
     $default_height = isset($bean->settings['height']) ? $bean->settings['height'] : 400;
     $form['settings']['height'] = array(
       '#title' => t('Map height'),
@@ -55,6 +56,51 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#field_suffix' => t('px'),
       '#size' => 4,
       '#default_value' => $default_height,
+      '#required' => FALSE,
+    );
+    // Optionally override map settings.
+    $default_override_map_settings = isset($bean->settings['override_map_settings']) ? $bean->settings['override_map_settings'] : FALSE;
+    $form['settings']['override_map_settings'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Override map settings',
+      '#default_value' => $default_override_map_settings,
+    );
+    $form['settings']['map_settings'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Map settings overrides',
+      '#tree' => TRUE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="settings[override_map_settings]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+    $default_zoom = isset($bean->settings['map_settings']['zoom']) ? $bean->settings['map_settings']['zoom'] : 1;
+    $form['settings']['map_settings']['zoom'] = array(
+      '#title' => t('Zoom'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $default_zoom,
+      '#required' => FALSE,
+    );
+    $form['settings']['map_settings']['center'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Map center',
+      '#tree' => TRUE,
+    );
+    $default_center = isset($bean->settings['map_settings']['center']) ? $bean->settings['map_settings']['center'] : array('lon' => 0, 'lat' => 0);
+    $form['settings']['map_settings']['center']['lon'] = array(
+      '#title' => t('Center longitude'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $default_center['lon'],
+      '#required' => FALSE,
+    );
+    $form['settings']['map_settings']['center']['lat'] = array(
+      '#title' => t('Center latitude'),
+      '#type' => 'textfield',
+      '#size' => 20,
+      '#default_value' => $default_center['lat'],
       '#required' => FALSE,
     );
     return $form;

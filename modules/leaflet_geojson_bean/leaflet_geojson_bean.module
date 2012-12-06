@@ -36,9 +36,30 @@ function leaflet_geojson_bean_bean_types() {
  */
 function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$features, array &$context) {
   $source_info = $context['source_info'];
+  $bean = $context['bean'];
+  $map = &$context['map'];
+
+  // Allow to override map center via bean settings.
+  if ($bean->settings['override_map_settings']) {
+    if (!empty($bean->settings['map_settings']['zoom'])) {
+      $map['settings']['zoom'] = $bean->settings['map_settings']['zoom'];
+    }
+    if (!empty($bean->settings['map_settings']['center']['lon']) && !empty($bean->settings['map_settings']['center']['lat'])) {
+      $map['center'] = array(
+        'lon' => $bean->settings['map_settings']['center']['lon'],
+        'lat' => $bean->settings['map_settings']['center']['lat'],
+      );
+    }
+  }
+
   // Add bbox js.
   if (isset($source_info['bbox'])) {
     leaflet_geojson_add_bbox_strategy($source_info);
+
+    // Make sure center isn't empty when using bbox strategy.
+    if (empty($map['center'])) {
+      $map['center'] = array('lon' => 0, 'lat' => 0);
+    }
   }
   else {
     $json = _leaflet_geojson_bean_fetch_json($source_info);
