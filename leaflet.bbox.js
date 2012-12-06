@@ -46,8 +46,12 @@
   Drupal.leafletBBox.geoJSONOptions = {
 
     onEachFeature: function(feature, layer) {
-      if (feature.properties && feature.properties.description) {
-        layer.bindPopup(feature.properties.description);
+      if (feature.properties) {
+        if (feature.properties.description) {
+          layer.bindPopup(feature.properties.description);
+        } else if (feature.properties.name) {
+          layer.bindPopup(feature.properties.name);
+        }
       }
     }
 
