@@ -37,6 +37,9 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#options' => $source_options,
       '#default_value' => $default_source,
       '#required' => TRUE,
+      '#description' => t("Choose the GeoJSON source that will provide the map data.") . "<br/>" .
+                        t("Views GeoJSON page displays are automatically exposed.") . " " .
+                        t("Implement <code>hook_leaflet_geojson_source_info()</code> to define custom geojson sources."),
     );
     // Choose a map preset.
     $map_options = $this->getMapOptions();
@@ -47,6 +50,9 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#options' => $map_options,
       '#default_value' => $default_map,
       '#required' => TRUE,
+      '#description' => t("Select the Leaflet map that will display the data.") . " " .
+        t("Implement <code>hook_leaflet_map_info()</code> to define custom leaflet maps."),
+
     );
     // Optionally set map height.
     $default_height = isset($bean->settings['height']) ? $bean->settings['height'] : 400;
@@ -57,6 +63,7 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#size' => 4,
       '#default_value' => $default_height,
       '#required' => FALSE,
+      '#description' => t("Set the map height in pixels."),
     );
     // Optionally override map settings.
     $default_override_map_settings = isset($bean->settings['override_map_settings']) ? $bean->settings['override_map_settings'] : FALSE;
@@ -64,6 +71,7 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#type' => 'checkbox',
       '#title' => 'Override map settings',
       '#default_value' => $default_override_map_settings,
+      '#description' => t("Choose to override settings as zoom level & center of the map."),
     );
     $form['settings']['map_settings'] = array(
       '#type' => 'fieldset',
@@ -87,6 +95,7 @@ class LeafletGeoJSONBean extends BeanPlugin {
       '#type' => 'fieldset',
       '#title' => 'Map center',
       '#tree' => TRUE,
+      '#description' => t("Provide a default map center especially when using the bounding box strategy."),
     );
     $default_center = isset($bean->settings['map_settings']['center']) ? $bean->settings['map_settings']['center'] : array('lon' => 0, 'lat' => 0);
     $form['settings']['map_settings']['center']['lon'] = array(
