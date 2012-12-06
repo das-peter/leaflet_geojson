@@ -24,7 +24,7 @@
  *   - url: The GeoJSON source url.
  *   - bbox: (optional) Set to TRUE to activate the Bounding Box strategy.
  *   - bbox_arg_id: (optional) Specify the bbox argument identifier.
- *       Defaults to 'BBOX'.
+ *       Defaults to 'bbox'.
  *   - type: (optional) The type of source, for example views_geojson.
  *   - ... (optional) further parameters specific to the source type.
  */

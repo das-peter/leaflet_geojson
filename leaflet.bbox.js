@@ -25,7 +25,7 @@
       url = typeof url !== 'undefined' ? url : Drupal.settings.leafletBBox.url;
 
       var bbox_arg_id = ('bbox_arg_id' in Drupal.settings.leafletBBox) ?
-        Drupal.settings.leafletBBox.bbox_arg_id : 'BBOX';
+        Drupal.settings.leafletBBox.bbox_arg_id : 'bbox';
 
       // Add bbox and zoom parameters as get params.
       url += "?" + bbox_arg_id +"=" + map.getBounds().pad(0.05).toBBoxString();
