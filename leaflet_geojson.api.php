@@ -55,5 +55,5 @@ function hook_leaflet_geojson_source_info() {
  * @see hook_leaflet_geojson_source_info()
  */
 function hook_leaflet_geojson_source_info_alter(array &$infos) {
-  $infos['simple_source']['url'] .= 'http://somewhere.else';
+  $infos['simple_source']['url'] = 'http://somewhere.else';
 }
