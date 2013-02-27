@@ -30,7 +30,7 @@
         Drupal.settings.leafletBBox.bbox_arg_id : 'bbox';
 
       // Add bbox and zoom parameters as get params.
-      url += "?" + bbox_arg_id +"=" + map.getBounds().pad(0.05).toBBoxString();
+      url += "?" + bbox_arg_id +"=" + map.getBounds().toBBoxString();
       url += "&zoom=" + map.getZoom();
 
       $.getJSON(url, function(data) {
