@@ -18,8 +18,19 @@ function leaflet_geojson_add_bbox_strategy($source_info) {
     // Add our script after leaflet.drupal.js.
     array('weight' => 5)
   );
+
   // Add custom settings.
-  $settings = $source_info;
+  // The JS now expects an array even if there's only one layer, so be sure
+  // the single layer is nested properly (the keyname is not important).
+  // @TODO fix this.
+  if (isset($settings['view_display'])) {
+    // This will happen when the map block is built by leaflet_geojson_bean.
+    $settings['leaflet_1'] = $source_info;
+  }
+  else {
+    // This will happen when the block is placed by the ctools (panels) plugin.
+    $settings = $source_info;
+  }
   drupal_add_js(array('leafletBBox' => $settings), 'setting');
 }
 
@@ -104,4 +115,13 @@ function leaflet_geojson_leaflet_geojson_source_info() {
     $view->destroy();
   }
   return $sources;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function leaflet_geojson_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/' . $plugin_type;
+  }
 }

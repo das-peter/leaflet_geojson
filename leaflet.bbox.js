@@ -4,14 +4,35 @@
 
     map: null,
     markerGroup: null,
+    overlays: {},
 
-    onMapLoad: function(event) {
-      var map = this;
+    onMapLoad: function(map) {
       Drupal.leafletBBox.map = map;
+      Drupal.leafletBBox.markerGroup = new Array();
 
-      Drupal.leafletBBox.markerGroup = new L.LayerGroup();
-      Drupal.leafletBBox.markerGroup.addTo(map);
+      // Intialize empty layers and associated controls.
+      var layer_count = 0;
+      $.each(Drupal.settings.leafletBBox, function(key, value) {
+        if (typeof value.url !== 'undefined') {
+          // Add empty layers.
+          Drupal.leafletBBox.markerGroup[key] = new L.LayerGroup();
+          Drupal.leafletBBox.markerGroup[key].addTo(map);
 
+          // Connect layer controls to layer data.
+          Drupal.leafletBBox.overlays[value.title]
+            = Drupal.leafletBBox.markerGroup[key];
+
+          layer_count++;
+        }
+      });
+
+      // If we have more than one data layer, add the control.
+      // @TODO: figure out how to interact with base map selection.
+      if (layer_count > 1) {
+        L.control.layers(null, Drupal.leafletBBox.overlays).addTo(map);
+      }
+
+      // Loading a map is the same as moving/zooming.
       map.on('moveend', Drupal.leafletBBox.moveEnd);
       Drupal.leafletBBox.moveEnd();
     },
@@ -19,12 +40,17 @@
     moveEnd: function(e) {
       var map = Drupal.leafletBBox.map;
       if (!map._popup) {
-        Drupal.leafletBBox.makeGeoJSONLayer(map);
+        // Rebuild the bounded GeoJSON layers.
+        $.each(Drupal.settings.leafletBBox, function(layer_key, layer_info) {
+          if (typeof layer_info.url !== 'undefined') {
+            Drupal.leafletBBox.makeGeoJSONLayer(map, layer_info, layer_key);
+          }
+        });
       }
     },
 
-    makeGeoJSONLayer: function(map, url) {
-      url = typeof url !== 'undefined' ? url : Drupal.settings.leafletBBox.url;
+    makeGeoJSONLayer: function(map, info, layer_key) {
+      var url = typeof info.url !== 'undefined' ? info.url : Drupal.settings.leafletBBox.url;
 
       var bbox_arg_id = ('bbox_arg_id' in Drupal.settings.leafletBBox) ?
         Drupal.settings.leafletBBox.bbox_arg_id : 'bbox';
@@ -33,14 +59,16 @@
       url += "?" + bbox_arg_id +"=" + map.getBounds().toBBoxString();
       url += "&zoom=" + map.getZoom();
 
+      // Make a new GeoJSON layer.
       $.getJSON(url, function(data) {
-        //New GeoJSON layer
         var geojsonLayer = new L.GeoJSON(data, Drupal.leafletBBox.geoJSONOptions);
-        Drupal.leafletBBox.markerGroup.clearLayers();
-        Drupal.leafletBBox.markerGroup.addLayer(geojsonLayer);
+        Drupal.leafletBBox.markerGroup[layer_key].clearLayers();
+        Drupal.leafletBBox.markerGroup[layer_key].addLayer(geojsonLayer);
+
+        // Connect the layer control to the new data.
+        Drupal.leafletBBox.overlays[info.title] = Drupal.leafletBBox.markerGroup[layer_key];
       });
     }
-
   };
 
   Drupal.leafletBBox.geoJSONOptions = {
@@ -57,14 +85,9 @@
 
   };
 
-  // Inject into leaflet initialize.
-  // @todo: there should be a nicer way to do that?
-  _leaflet_bbox_old_leaflet_initialize = L.Map.prototype.initialize;
-  L.Map.include({
-    initialize: function(/*HTMLElement or String*/ id, /*Object*/ options) {
-      _leaflet_bbox_old_leaflet_initialize.apply(this, [id, options]);
-      this.on('load', Drupal.leafletBBox.onMapLoad, this);
-    }
+  // Insert map.
+  $(document).bind('leaflet.map', function(e, map, lMap) {
+    Drupal.leafletBBox.onMapLoad(lMap);
   });
 
 })(jQuery);
