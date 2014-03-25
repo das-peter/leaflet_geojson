@@ -84,10 +84,12 @@ function leaflet_geojson_leaflet_geojson_source_info() {
 
         // Determine if we should use a BBox strategy.
         if ($arguments = $display->handler->get_option('arguments')) {
-          if ($arguments['bbox_argument']['default_argument_type'] == 'querystring') {
-            $source['bbox'] = TRUE;
-            if (isset($arguments['bbox_argument']['default_argument_options'])) {
-              $source['bbox_arg_id'] = $arguments['bbox_argument']['default_argument_options']['arg_id'];
+          foreach($arguments as $id => $argument) {
+            if (strpos($id, 'bbox') !== FALSE && $argument['default_argument_type'] == 'querystring') {
+              $source['bbox'] = TRUE;
+              if (isset($argument['default_argument_options'])) {
+                $source['bbox_arg_id'] = $argument['default_argument_options']['arg_id'];
+              }
             }
           }
         }
