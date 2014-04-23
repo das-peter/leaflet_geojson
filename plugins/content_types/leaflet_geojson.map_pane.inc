@@ -85,14 +85,16 @@ function leaflet_geojson_map_pane_render_layered_map($conf) {
     // Add the bounding (bbox) script.
     leaflet_geojson_add_bbox_strategy($data_layers_info);
 
-    // Also need geoclusters clustering script.
-    drupal_add_js(
-      drupal_get_path('module', 'geocluster') . '/js/geocluster.leaflet.bbox.js',
-      array(
-        // Make sure geocluster's weight is loaded after leaflet.bbox
-        'weight' => 100,
-      )
-    );
+    // If we are using geocluster, add the javascript.
+    if (module_exists('geocluster')) {
+      drupal_add_js(
+        drupal_get_path('module', 'geocluster') . '/js/geocluster.leaflet.bbox.js',
+        array(
+          // Make sure geocluster's weight is loaded after leaflet.bbox
+          'weight' => 100,
+        )
+      );
+    }
   }
   else {
     /* @TODO: non-bounded data fetch */
