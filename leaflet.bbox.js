@@ -59,6 +59,11 @@
       url += "?" + bbox_arg_id +"=" + map.getBounds().toBBoxString();
       url += "&zoom=" + map.getZoom();
 
+      // Append any existing query string (respect exposed filters).
+      if (window.location.search.substring(1) != '') {
+        url += "&" + window.location.search.substring(1);
+      }
+
       // Make a new GeoJSON layer.
       $.getJSON(url, function(data) {
         var geojsonLayer = new L.GeoJSON(data, Drupal.leafletBBox.geoJSONOptions);
