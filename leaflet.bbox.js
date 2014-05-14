@@ -19,7 +19,7 @@
           Drupal.leafletBBox.markerGroup[key].addTo(map);
 
           // Connect layer controls to layer data.
-          Drupal.leafletBBox.overlays[value.title]
+          Drupal.leafletBBox.overlays[value.layer_title]
             = Drupal.leafletBBox.markerGroup[key];
 
           layer_count++;
@@ -71,7 +71,7 @@
         Drupal.leafletBBox.markerGroup[layer_key].addLayer(geojsonLayer);
 
         // Connect the layer control to the new data.
-        Drupal.leafletBBox.overlays[info.title] = Drupal.leafletBBox.markerGroup[layer_key];
+        Drupal.leafletBBox.overlays[info.layer_title] = Drupal.leafletBBox.markerGroup[layer_key];
       });
     }
   };
