@@ -89,8 +89,10 @@ function leaflet_geojson_leaflet_geojson_source_info() {
         $title = $view->human_name . ' - ' . $display_title;
 
         // Set the layer title for map display.
-        $layer_title = $display->display_options['title'];
-        if ($layer_title == '') {
+        if (isset($display->display_options['title'])) {
+          $layer_title = $display->display_options['title'];
+        }
+        if (!isset($layer_title) || $layer_title == '') {
           // Fallback to display_name since it is always set.
           $layer_title = $display_name;
         }
