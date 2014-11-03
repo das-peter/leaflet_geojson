@@ -5,8 +5,7 @@
     map: null,
     markerGroup: null,
 
-    onMapLoad: function(event) {
-      var map = this;
+    onMapLoad: function(map) {
       Drupal.leafletBBox.map = map;
 
       Drupal.leafletBBox.markerGroup = new L.LayerGroup();
@@ -57,14 +56,8 @@
 
   };
 
-  // Inject into leaflet initialize.
-  // @todo: there should be a nicer way to do that?
-  _leaflet_bbox_old_leaflet_initialize = L.Map.prototype.initialize;
-  L.Map.include({
-    initialize: function(/*HTMLElement or String*/ id, /*Object*/ options) {
-      _leaflet_bbox_old_leaflet_initialize.apply(this, [id, options]);
-      this.on('load', Drupal.leafletBBox.onMapLoad, this);
-    }
+  $(document).bind('leaflet.map', function(e, map, lMap){
+    Drupal.leafletBBox.onMapLoad(lMap);
   });
 
 })(jQuery);
