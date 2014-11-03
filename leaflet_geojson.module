@@ -64,11 +64,10 @@ function leaflet_geojson_leaflet_geojson_source_info() {
   foreach ($views as $view) {
     foreach ($view->display as $display_name => $display) {
       $view->set_display($display_name);
+      $style_plugin = $view->display_handler->get_option('style_plugin');
+      $url = $view->display_handler->get_url();
       // Make GeoJSON sources from the views_geojson module.
-      if ($view->display_handler->get_option('style_plugin') == 'views_geojson' &&
-        $display->display_plugin == 'page' &&
-        $display->handler->get_option('path') != ''
-      ) {
+      if ($style_plugin == 'views_geojson' && !empty($url)) {
         $display_title = '(' . $display_name . ')';
         if (!empty($display->display_title)) {
           $display_title = $display->display_title . ' ' . $display_title;
@@ -84,7 +83,7 @@ function leaflet_geojson_leaflet_geojson_source_info() {
 
         // Determine if we should use a BBox strategy.
         if ($arguments = $display->handler->get_option('arguments')) {
-          if ($arguments['bbox_argument']['default_argument_type'] == 'querystring') {
+          if (isset($arguments['bbox_argument']) && $arguments['bbox_argument']['default_argument_type'] == 'querystring') {
             $source['bbox'] = TRUE;
             if (isset($arguments['bbox_argument']['default_argument_options'])) {
               $source['bbox_arg_id'] = $arguments['bbox_argument']['default_argument_options']['arg_id'];
