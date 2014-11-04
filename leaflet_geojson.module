@@ -102,3 +102,43 @@ function leaflet_geojson_leaflet_geojson_source_info() {
   }
   return $sources;
 }
+
+/**
+ * Implements hook_views_api().
+ */
+function leaflet_geojson_views_api() {
+  return array(
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'leaflet_geojson') . '/views',
+  );
+}
+
+/**
+ * Fetches the GeoJSON output from a source.
+ *
+ * @TODO Currently we loop through a drupal_http_request() to fetch the data
+ * because Views GeoJSON doesn't provide a proper way of simply fetch the data.
+ *
+ * @param array $source_info
+ *   Source info to use.
+ *
+ * @return mixed
+ *  The GeoJSON output provided by the source
+ */
+function leaflet_geojson_fetch_json_from_source($source_info) {
+  // @todo: doesn't work because views_geojson directly outputs and terminates the request.
+  /*
+  if ($source['type'] == 'views_geojson') {
+    $view = views_get_view($source['view']);
+    $output = $view->execute_display($source['view_display']);
+  }
+  */
+  $result = drupal_http_request($source_info['url']);
+  if (in_array( $result->code, array(200, 304))) {
+    $json_string = (isset($result->data)) ? $result->data : '';
+    return drupal_json_decode($json_string);
+  }
+  else {
+    // Error $result->code
+  }
+}
