@@ -4,3 +4,5 @@ description = "API Extension for using Leaflet with GeoJSON data sources."
 core = 7.x
 
 dependencies[] = leaflet
+
+files[] = views/views_handler_area_leaflet_geojson.inc

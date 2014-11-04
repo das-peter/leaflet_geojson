@@ -62,7 +62,7 @@ function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$f
     }
   }
   else {
-    $json = _leaflet_geojson_bean_fetch_json($source_info);
+    $json = leaflet_geojson_fetch_json_from_source($source_info);
     $features[] = array(
       'type' => 'json',
       'json' => $json,
@@ -70,22 +70,4 @@ function leaflet_geojson_bean_leaflet_geojson_bean_view_features_alter(array &$f
   }
 }
 
-
-function _leaflet_geojson_bean_fetch_json($source_info) {
-  // @todo: doesn't work because views_geojson directly outputs and terminates the request.
-  /*
-  if ($source['type'] == 'views_geojson') {
-    $view = views_get_view($source['view']);
-    $output = $view->execute_display($source['view_display']);
-  }
-  */
-  $result = drupal_http_request($source_info['url']);
-  if (in_array( $result->code, array(200, 304))) {
-    $json_string = (isset($result->data)) ? $result->data : '';
-    return drupal_json_decode($json_string);
-  }
-  else {
-    // Error $result->code
-  }
-}
 
