@@ -67,7 +67,7 @@ function leaflet_geojson_leaflet_geojson_source_info() {
       $style_plugin = $view->display_handler->get_option('style_plugin');
       $url = $view->display_handler->get_url();
       // Make GeoJSON sources from the views_geojson module.
-      if ($style_plugin == 'views_geojson' && !empty($url)) {
+      if (in_array($style_plugin, array('views_geojson_feed', 'views_geojson')) && !empty($url)) {
         $display_title = '(' . $display_name . ')';
         if (!empty($display->display_title)) {
           $display_title = $display->display_title . ' ' . $display_title;
