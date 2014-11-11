@@ -18,11 +18,19 @@ function leaflet_geojson_add_bbox_strategy($source_info) {
     // Add our script after leaflet.drupal.js.
     array('weight' => 5)
   );
-  // Add custom settings.
-  $settings[$source_info['leaflet_map_id']] = $source_info;
 
-  // Let other modules interact with the settings or this event.
-  drupal_alter('leaflet_geojson_add_bbox_strategy', $settings);
+  // Add custom settings.
+  // The JS now expects an array even if there's only one layer, so be sure
+  // the single layer is nested properly (the keyname is not important).
+  // @TODO fix this.
+  if (isset($settings['view_display'])) {
+    // This will happen when the map block is built by leaflet_geojson_bean.
+    $settings['leaflet_1'] = $source_info;
+  }
+  else {
+    // This will happen when the block is placed by the ctools (panels) plugin.
+    $settings = $source_info;
+  }
   drupal_add_js(array('leafletBBox' => $settings), 'setting');
 }
 
@@ -71,25 +79,39 @@ function leaflet_geojson_leaflet_geojson_source_info() {
       $url = $view->display_handler->get_url();
       // Make GeoJSON sources from the views_geojson module.
       if (in_array($style_plugin, array('views_geojson_feed', 'views_geojson')) && !empty($url)) {
+
+        // Build the display title for the admin UI.
         $display_title = '(' . $display_name . ')';
         if (!empty($display->display_title)) {
           $display_title = $display->display_title . ' ' . $display_title;
         }
         $title = $view->human_name . ' - ' . $display_title;
 
+        // Set the layer title for map display.
+        if (isset($display->display_options['title'])) {
+          $layer_title = $display->display_options['title'];
+        }
+        if (!isset($layer_title) || $layer_title == '') {
+          // Fallback to display_name since it is always set.
+          $layer_title = $display_name;
+        }
+
         $source = array(
           'id' => $view->name . '_' . $display_name,
           'title' => $title,
+          'layer_title' => $layer_title,
           'type' => 'views_geojson',
           'url' => url($view->display_handler->get_option('path'), array('absolute' => TRUE)),
         );
 
         // Determine if we should use a BBox strategy.
         if ($arguments = $display->handler->get_option('arguments')) {
-          if (isset($arguments['bbox_argument']) && $arguments['bbox_argument']['default_argument_type'] == 'querystring') {
-            $source['bbox'] = TRUE;
-            if (isset($arguments['bbox_argument']['default_argument_options'])) {
-              $source['bbox_arg_id'] = $arguments['bbox_argument']['default_argument_options']['arg_id'];
+          foreach($arguments as $id => $argument) {
+            if (strpos($id, 'bbox') !== FALSE && $argument['default_argument_type'] == 'querystring') {
+              $source['bbox'] = TRUE;
+              if (isset($argument['default_argument_options'])) {
+                $source['bbox_arg_id'] = $argument['default_argument_options']['arg_id'];
+              }
             }
           }
         }
@@ -104,6 +126,15 @@ function leaflet_geojson_leaflet_geojson_source_info() {
     $view->destroy();
   }
   return $sources;
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function leaflet_geojson_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/' . $plugin_type;
+  }
 }
 
 /**

@@ -24,6 +24,7 @@ function leaflet_geojson_views_data() {
     'area' => array(
       'handler' => 'views_handler_area_leaflet_geojson',
     ),
+    'theme' => 'leaflet_geojson_geojson_layer',
   );
 
   return $data;
