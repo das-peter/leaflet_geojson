@@ -17,6 +17,17 @@ class views_handler_area_leaflet_geojson extends views_handler_area {
   protected $supportedStylePlugins = array('leaflet');
 
   /**
+   * Stores the settings to be added by geojson_leaflet_map_prebuild_alter().
+   *
+   * Associative array of settings keyed by the map id.
+   *
+   * @see views_handler_area_leaflet_geojson::geojson_leaflet_map_prebuild_alter()
+   *
+   * @var array
+   */
+  protected static $mapSettings = array();
+
+  /**
    * Checks if the given $plugin is supported by this area handler.
    *
    * @param string $style_plugin
@@ -106,23 +117,43 @@ class views_handler_area_leaflet_geojson extends views_handler_area {
    */
   public function render($empty = FALSE) {
     if (!$empty || !empty($this->options['empty'])) {
+      $map_id = $this->view->style_plugin->getMapId();
+      $leaflet_layer_id = drupal_html_id('leaflet-geojson-' . $map_id);
+
       // Add GeoJSON Layer.
       $source_info = leaflet_geojson_source_get_info($this->options['leaflet_geojson_source']);
+      $source_info['leaflet_map_id'] = $map_id;
+      $source_info['leaflet_layer_id'] = $leaflet_layer_id;
       if (!empty($source_info['bbox'])) {
-        leaflet_geojson_add_bbox_strategy($source_info);
+        leaflet_geojson_add_bbox_strategy($source_info, $leaflet_layer_id);
       }
-      else {
-        // @TODO Adjust leaflet views so that we can inject data. E.g.
-        // leaflet_views_plugin_style could store the build result from
-        // leaflet_build_map() in a property by reference so we can modify it.
-        //      $json = leaflet_geojson_fetch_json_from_source($source_info);
-        //      $features[] = array(
-        //        'type' => 'json',
-        //        'json' => $json,
-        //      );
+
+      // Fetch and add the first data.
+      $json = leaflet_geojson_fetch_json_from_source($source_info);
+      $json['group'] = TRUE;
+      $json['label'] = 'Group Label';
+      $json['leaflet_id'] = $leaflet_layer_id;
+      views_handler_area_leaflet_geojson::$mapSettings[$map_id]['features'][] = $json;
+
+      // Add layer control if enabled.
+      if (!empty($this->options['add_layer_control'])) {
+        views_handler_area_leaflet_geojson::$mapSettings[$map_id]['map']['settings']['layerControl'] = TRUE;
       }
     }
     return '';
   }
 
+  /**
+   * Inject our settings into the leaflet map settings.
+   *
+   * Called by leaflet_geojson_leaflet_map_prebuild_alter()
+   *
+   * @see leaflet_geojson_leaflet_map_prebuild_alter()
+   */
+  public static function geojson_leaflet_map_prebuild_alter(&$settings) {
+    $map_id = $settings['mapId'];
+    if (isset(self::$mapSettings[$map_id])) {
+      $settings = drupal_array_merge_deep($settings, self::$mapSettings[$map_id]);
+    }
+  }
 }

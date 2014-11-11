@@ -6,9 +6,9 @@
  */
 
 /**
- * Add a Bounding Box Strategy
+ * Add a Bounding Box Strategy.
  *
- * @param $source_info
+ * @param array $source_info
  *   The source info as specified in hook_leaflet_geojson_source_info().
  */
 function leaflet_geojson_add_bbox_strategy($source_info) {
@@ -19,7 +19,10 @@ function leaflet_geojson_add_bbox_strategy($source_info) {
     array('weight' => 5)
   );
   // Add custom settings.
-  $settings = $source_info;
+  $settings[$source_info['leaflet_map_id']] = $source_info;
+
+  // Let other modules interact with the settings or this event.
+  drupal_alter('leaflet_geojson_add_bbox_strategy', $settings);
   drupal_add_js(array('leafletBBox' => $settings), 'setting');
 }
 
@@ -93,7 +96,7 @@ function leaflet_geojson_leaflet_geojson_source_info() {
 
         // Custom views_geojson attributes.
         $source['view'] = $view->name;
-        $source['view_display'] = $display;
+        $source['view_display'] = $display->id;
 
         $sources[$source['id']] = $source;
       }
@@ -141,4 +144,12 @@ function leaflet_geojson_fetch_json_from_source($source_info) {
   else {
     // Error $result->code
   }
+}
+
+/**
+ * Implements hook_leaflet_map_prebuild_alter().
+ */
+function leaflet_geojson_leaflet_map_prebuild_alter(&$settings) {
+  // Ensure our views handler can inject it's modifications.
+  views_handler_area_leaflet_geojson::geojson_leaflet_map_prebuild_alter($settings);
 }
