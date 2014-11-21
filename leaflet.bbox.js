@@ -1,6 +1,61 @@
 (function ($) {
 
+  Drupal.leafletBBoxInstance = function(map_id, lMap) {
+    this.map_id = map_id;
+    this.map = lMap;
+
+    var settings = this.settings();
+
+    // Initialize empty layers and associated controls.
+    var layer_count = 0;
+    $.each(settings, function(key, value) {
+      if (typeof value.url !== 'undefined') {
+        // Add empty layers.
+        this.markerGroup[key] = new L.LayerGroup();
+        this.markerGroup[key].addTo(map);
+
+        // Connect layer controls to layer data.
+        this.overlays[value.layer_title] = this.markerGroup[key];
+
+        layer_count++;
+      }
+    });
+
+    // If we have more than one data layer, add the control.
+    // @TODO: figure out how to interact with base map selection.
+    if (layer_count > 1) {
+      L.control.layers(null, this.overlays).addTo(map);
+    }
+
+    // Loading a map is the same as moving/zooming.
+    this.map.on('moveend', this.moveEnd);
+    this.moveEnd();
+  }
+  Drupal.leafletBBoxInstance.prototype.map_id = null;
+  Drupal.leafletBBoxInstance.prototype.map = null;
+  Drupal.leafletBBoxInstance.prototype.markerGroup = [];
+  Drupal.leafletBBoxInstance.prototype.overlays = [];
+
+  Drupal.leafletBBoxInstance.prototype.settings = function() {
+    return Drupal.settings.leafletBBox[this.map_id];
+  }
+
+  Drupal.leafletBBoxInstance.prototype.moveEnd = function(e) {
+    var map = this.map;
+    if (!map._popup) {
+      // Rebuild the bounded GeoJSON layers.
+      $.each(this.settings(), function(layer_key, layer_info) {
+        if (typeof layer_info.url !== 'undefined') {
+          Drupal.leafletBBox.makeGeoJSONLayer(map, layer_info, layer_key);
+        }
+      });
+    }
+  },
+
+
   Drupal.leafletBBox = {
+
+    instances: {},
 
     map: null,
     markerGroup: null,
@@ -92,7 +147,8 @@
 
   // Insert map.
   $(document).bind('leaflet.map', function(e, map, lMap) {
-    Drupal.leafletBBox.onMapLoad(lMap);
+    // Drupal.leafletBBox.onMapLoad(lMap);
+    // Drupal.leafletBBox.instances[map.map_id] = new Drupal.leafletBBoxInstance(map.map_id);
   });
 
 })(jQuery);

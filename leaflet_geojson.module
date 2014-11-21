@@ -8,30 +8,51 @@
 /**
  * Add a Bounding Box Strategy.
  *
+ * This function can be called multiple times with different source infos to
+ * attach settings to the same map.
+ *
  * @param array $source_info
  *   The source info as specified in hook_leaflet_geojson_source_info().
  */
 function leaflet_geojson_add_bbox_strategy($source_info) {
-  // Add bounding box javascript.
-  drupal_add_js(
-    drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
-    // Add our script after leaflet.drupal.js.
-    array('weight' => 5)
-  );
+  static $scripts_added;
+  $js_settings_reference = &drupal_static(__FUNCTION__, NULL);
+  if (!isset($scripts_added)) {
+    $scripts_added = TRUE;
+    // Add bounding box javascript.
+    drupal_add_js(
+      drupal_get_path('module', 'leaflet_geojson') . '/leaflet.bbox.js',
+      // Add our script after leaflet.drupal.js.
+      array('weight' => 5)
+    );
 
-  // Add custom settings.
-  // The JS now expects an array even if there's only one layer, so be sure
-  // the single layer is nested properly (the keyname is not important).
-  // @TODO fix this.
-  if (isset($settings['view_display'])) {
-    // This will happen when the map block is built by leaflet_geojson_bean.
-    $settings['leaflet_1'] = $source_info;
+    // If we are using geocluster, add the javascript.
+    // @TODO Can we delegate this to geocluster? It adjusts our handling...
+    if (module_exists('geocluster')) {
+      drupal_add_js(
+        drupal_get_path('module', 'geocluster') . '/js/geocluster.leaflet.bbox.js',
+        array(
+          // Make sure geocluster's weight is loaded after leaflet.bbox
+          'weight' => 100,
+        )
+      );
+    }
+  }
+
+  // To make it more convenient to use this function we initially set the
+  // settings using drupal_add_js() but afterwards we inject by reference.
+  if (empty($js_settings_reference)) {
+    $settings[$source_info['leaflet_map_id']][] = $source_info;
+    $javascript = drupal_add_js(array('leafletBBox' => $settings), 'setting');
+    end($javascript['settings']['data']);
+    // Store the location of the just added settings so we can append to that.
+    $js_settings_reference = key($javascript['settings']['data']);
   }
   else {
-    // This will happen when the block is placed by the ctools (panels) plugin.
-    $settings = $source_info;
+    // Inject additional settings using the static cache of drupal_add_js().
+    $javascript = &drupal_static('drupal_add_js', array());
+    $javascript['settings']['data'][$js_settings_reference]['leafletBBox'][$source_info['leaflet_map_id']][] = $source_info;
   }
-  drupal_add_js(array('leafletBBox' => $settings), 'setting');
 }
 
 
@@ -106,7 +127,7 @@ function leaflet_geojson_leaflet_geojson_source_info() {
 
         // Determine if we should use a BBox strategy.
         if ($arguments = $display->handler->get_option('arguments')) {
-          foreach($arguments as $id => $argument) {
+          foreach ($arguments as $id => $argument) {
             if (strpos($id, 'bbox') !== FALSE && $argument['default_argument_type'] == 'querystring') {
               $source['bbox'] = TRUE;
               if (isset($argument['default_argument_options'])) {

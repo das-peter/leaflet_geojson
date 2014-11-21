@@ -36,6 +36,7 @@
 function hook_leaflet_geojson_source_info() {
   $sources = array();
   $sources['simple_source'] = array(
+    'leaflet_map_id' => 'my_map',
     'title' => 'My Source',
     'url' => 'http://example.com',
   );

@@ -7,7 +7,7 @@
 $plugin = array(
   'title' => t('Leaflet GeoJSON map'),
   'description' => t('Display a Leaflet map driven by GeoJSON feeds.'),
-  'category' => array(t('Leaflet GeoJSON')),
+  'category' => t('Leaflet GeoJSON'),
   'single' => TRUE,
   'defaults' => array(),
   'admin info' => 'leaflet_geojson_map_pane_admin_info',
@@ -58,48 +58,38 @@ function leaflet_geojson_map_pane_render_layered_map($conf) {
 
   // Gather information about the leaflet base and data layers.
   $map_base_info = leaflet_map_get_info($conf['map_settings']['base']);
-  $data_layers_info = array();
-  foreach ($conf['map_settings']['info']['data'] as $layer_idx => $layer_machine_name) {
-    $data_layers_info[$layer_idx]
-      = leaflet_geojson_source_get_info($layer_machine_name);
-  }
-
-  // We are not currently supporting mixed bounding, i.e. if any one layer
-  // is not bounded, then all layers will be fetched non-bounded. This will
-  // have serious performance impact at large scale.
+  $map_id = drupal_html_id('leaflet-map-geojson');
   $all_bounded = TRUE;
-  foreach ($data_layers_info as $layer_idx => $layer_info) {
-    if (!isset($layer_info['bbox'])) {
-      $all_bounded = FALSE;
-      break;
+  $feature_layers = array();
+  foreach ($conf['map_settings']['info']['data'] as $layer_idx => $layer_machine_name) {
+    $source_info = leaflet_geojson_source_get_info($layer_machine_name);
+    $source_info['leaflet_map_id'] = $map_id;
+    $source_info['group_id'] = $layer_idx;
+    $all_bounded = $all_bounded && isset($source_info['bbox']);
+
+    $feature_layers[$layer_idx] = array(
+      'group' => TRUE,
+      'label' => $layer_machine_name,
+      'leaflet_id' => $layer_idx,
+      'features' => array(),
+    );
+    // Fetch JSON for non bbox layers.
+    if (!isset($source_info['bbox'])) {
+      // Fetch and add the first data.
+      $feature_layers[$layer_idx]['features'] = leaflet_geojson_fetch_json_from_source($source_info);
+    }
+    else {
+      // Add the bounding (bbox) script.
+      leaflet_geojson_add_bbox_strategy($source_info);
     }
   }
 
-  $feature_layers = array();
   if ($all_bounded) {
-
     // Ensure the map center is non-empty for bbox.
     if (empty($map_base_info['center'])) {
       $map_base_info['center'] = array('lon' => 0,'lat' => 0);
     }
-    // Add the bounding (bbox) script.
-    leaflet_geojson_add_bbox_strategy($data_layers_info);
-
-    // If we are using geocluster, add the javascript.
-    if (module_exists('geocluster')) {
-      drupal_add_js(
-        drupal_get_path('module', 'geocluster') . '/js/geocluster.leaflet.bbox.js',
-        array(
-          // Make sure geocluster's weight is loaded after leaflet.bbox
-          'weight' => 100,
-        )
-      );
-    }
   }
-  else {
-    /* @TODO: non-bounded data fetch */
-  }
-
 
   // Apply any overrides of natural center and zoom.
   if (!empty($conf['map_settings']['override_zoom_center'])) {
@@ -118,9 +108,7 @@ function leaflet_geojson_map_pane_render_layered_map($conf) {
   // Allow other modules to alter the map data.
   drupal_alter('leaflet_geojson_map_pane', $map_base_info, $feature_layers);
 
-  $map = leaflet_build_map(
-    $map_base_info, $feature_layers, $conf['map_settings']['height'] . 'px'
-  );
+  $map = leaflet_build_map($map_base_info, $feature_layers, $conf['map_settings']['height'] . 'px', $map_id);
   return render($map);
 }
 
@@ -166,12 +154,9 @@ function leaflet_geojson_map_pane_edit_form($form, &$form_state) {
   );
 
   // Provide some UI help for setting up multi-layer maps.
-  $data_layers_description
-    = t('Choose one or more GeoJSON sources that will provide the map data. ');
-  $data_layers_description
-    .= t('If more than one source  is selected, a layer control will appear on the map. ');
-  $data_layers_description
-    .= t('Views GeoJSON page displays are automatically exposed here.');
+  $data_layers_description = t('Choose one or more GeoJSON sources that will provide the map data. ');
+  $data_layers_description .= t('If more than one source  is selected, a layer control will appear on the map. ');
+  $data_layers_description .= t('Views GeoJSON page displays are automatically exposed here.');
 
   // Build the data layers selector.
   $form['map_settings']['info'] = array(
@@ -206,8 +191,7 @@ function leaflet_geojson_map_pane_edit_form($form, &$form_state) {
   for ($layer_index = 1; $layer_index <= $form_state['layer_count']; $layer_index++) {
     $default_layer_source = key($source_options);
     if (isset($conf['map_settings']['info']['data']['leaflet_' . $layer_index])) {
-      $default_layer_source
-        = $conf['map_settings']['info']['data']['leaflet_' . $layer_index];
+      $default_layer_source = $conf['map_settings']['info']['data']['leaflet_' . $layer_index];
     }
     $form['map_settings']['info']['data']['leaflet_' . $layer_index] = array(
       '#type' => 'select',
